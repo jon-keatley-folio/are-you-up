@@ -9,7 +9,7 @@ cp u8g2_displays.h nodemcu-firmware/app/include/u8g2_displays.h
 
 cp u8g2_fonts.h nodemcu-firmware/app/include/u8g2_fonts.h
 
-docker run --rm -ti -v `pwd`/nodemcu-firmware:/opt/nodemcu-firmware marcelstoer/nodemcu-build build
+podman run --rm -ti -v `pwd`/nodemcu-firmware:/opt/nodemcu-firmware marcelstoer/nodemcu-build build
 
 cp nodemcu-firmware/bin/nodemcu*.bin `pwd`
 

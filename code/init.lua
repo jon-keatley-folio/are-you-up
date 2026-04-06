@@ -1,55 +1,58 @@
+require "display"
 
-require "snake"
+if file.exists("config.lua") then
+  require "config"
+  config = get_config()
+  mode = 2
+else
+  mode = 1
+end
+
+-- modes
+-- 1 config
+-- 2 wifi
+-- 3 running
 
 function update()
 
-  -- tick game
-  snake.input(gpio.read(action_gpio) == 0)
-  snake.update()
-  snake.draw(screen)
-  
+  if mode == 0 then
+    display.drawErr("Still booting","Please wait","(o_o)")
+  elseif mode == 1 then
+    display.drawErr("Config.lua","Not found!","(x_x)")
+  elseif mode == 2 then
+    display.drawMsg("Setting up Wifi","Please wait","(-_-) z Z Z")
+    
+    if wifi.sta.getip() then
+      mode = 3
+    end
+  else -- assume mode 3
+    display.drawMsg("", "Checking url","(^o^)")
+  end
+
   --restart timer
   updateTmr:start()
 end
 
--- SDA == blue
--- SCL == red
--- GND == grey
--- VCC == green
-
 function main()
   -- setup i2c interface
-  print("Setting up display")
+  print("Setting up i2C")
   local bus_id  = 0
   local sda = 3 -- GPIO0 - D3
   local scl = 4 -- GPIO2 - D4
   i2c.setup(bus_id, sda, scl, i2c.FAST)
   local sla = 0x3C
-  screen = u8g2.ssd1306_i2c_128x64_noname(bus_id, sla)
-  
-  --inputs
-  action_gpio = 5 --GPIO14 D5 
-  gpio.mode(action_gpio, gpio.INPUT, gpio.PULLUP)
-  
-  is_action_button_down = false
-  --gpio.trig(action_gpio, "both", function(level, when, eventcount)
-  --  if level == 1 then 
-  --    is_action_button_down = true
-  --  elseif is_action_button_down == true then
-  --    snake.input(true)
-  --    is_action_button_down = false
-  --  end
-  --end)
-  
-  
-  print("Setting up snake")
+  print("Setting up display")
   -- setup display
-  snake = newSnake(bus_id)
-  snake.update()
+  display = newDisplay(bus_id, sla)
+  display.drawMsg("","Please wait",":P")
+  
+  --setup wifi
+  wifi.setmode(wifi.STATION)
+  wifi.sta.config(config.ssid,config.pass)
 
   -- start clock for updates
   updateTmr = tmr.create()
-  updateTmr:register(20,tmr.ALARM_SEMI, function() -- semi auto to protect against over run
+  updateTmr:register(300,tmr.ALARM_SEMI, function() -- semi auto to protect against over run
     update()
   end)
   updateTmr:start()
