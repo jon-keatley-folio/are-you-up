@@ -11,6 +11,7 @@ end
 -- modes
 -- 1 config
 -- 2 wifi
+-- 3 wifi starting
 -- 3 running
 
 function update()
@@ -22,9 +23,15 @@ function update()
   elseif mode == 2 then
     display.drawMsg("Setting up Wifi","Please wait","(-_-) z Z Z")
     
-    if wifi.sta.getip() then
-      mode = 3
-    end
+    --setup wifi
+    wifi.setmode(wifi.STATION)
+    wifi.sta.config(config.ssid,config.pass)
+    mode = 3
+    
+  elseif mode == 3 then
+      if wifi.sta.getip() then
+        mode = 4
+      end
   else -- assume mode 3
     display.drawMsg("", "Checking url","(^o^)")
   end
@@ -45,14 +52,10 @@ function main()
   -- setup display
   display = newDisplay(bus_id, sla)
   display.drawMsg("","Please wait",":P")
-  
-  --setup wifi
-  wifi.setmode(wifi.STATION)
-  wifi.sta.config(config.ssid,config.pass)
 
   -- start clock for updates
   updateTmr = tmr.create()
-  updateTmr:register(300,tmr.ALARM_SEMI, function() -- semi auto to protect against over run
+  updateTmr:register(1000,tmr.ALARM_SEMI, function() -- semi auto to protect against over run
     update()
   end)
   updateTmr:start()
@@ -60,7 +63,7 @@ end
 
 -- delayed init to protect against errors flash blocking
 local init = tmr.create()
-init:register(4000,tmr.ALARM_SINGLE, function ()
+init:register(3000,tmr.ALARM_SINGLE, function ()
   main()
 	init:unregister()
 end)
