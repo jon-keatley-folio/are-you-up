@@ -1,8 +1,7 @@
 require "display"
 
+config = {}
 if file.exists("config.lua") then
-  require "config"
-  config = get_config()
   mode = 2
 else
   mode = 1
@@ -24,6 +23,7 @@ function update()
     display.drawMsg("Setting up Wifi","Please wait","(-_-) z Z Z")
     
     --setup wifi
+    print(config.ssid)
     wifi.setmode(wifi.STATION)
     wifi.sta.config(config.ssid,config.pass)
     mode = 3
@@ -52,6 +52,11 @@ function main()
   -- setup display
   display = newDisplay(bus_id, sla)
   display.drawMsg("","Please wait",":P")
+  
+  if mode == 2 then 
+    require "config"
+    config = getConfig()
+  end
 
   -- start clock for updates
   updateTmr = tmr.create()
