@@ -7,6 +7,8 @@
 )]
 #![deny(clippy::large_stack_frames)]
 
+mod display;
+
 use embassy_executor::Spawner;
 use embassy_time::{Duration, Timer};
 use esp_hal::clock::CpuClock;
@@ -64,6 +66,7 @@ async fn main(spawner: Spawner) -> ! {
     // TODO: Spawn some tasks
     let _ = spawner;
     
+    // Setup I2C
     let i2c_bus = I2c::new(
             peripherals.I2C0,
             // I2cConfig is alias of esp_hal::i2c::master::I2c::Config
@@ -73,6 +76,12 @@ async fn main(spawner: Spawner) -> ! {
         .with_scl(peripherals.GPIO18)
         .with_sda(peripherals.GPIO23)
         .into_async();
+    
+    // Setup screen
+    let interface = I2CDisplayInterface::new(i2c_bus);
+    let mut display = Ssd1306Async::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
+        .into_buffered_graphics_mode();
+    display.init().await.unwrap();
         
 
     loop {
